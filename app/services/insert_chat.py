@@ -15,7 +15,7 @@ def insert_chat(
     cur = conn.cursor()
 
     if conversation_id is None:
-        conversation_id = uuid.uuid4()
+        conversation_id = str(uuid.uuid4())
 
     # Step 1: Ensure user exists
     cur.execute("""

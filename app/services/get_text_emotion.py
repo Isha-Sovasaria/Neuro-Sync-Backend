@@ -21,7 +21,13 @@ lines = response.text.strip().split("\n")
 
 id2label = {}
 for line in lines:
-    index, label = line.strip().split("\t")
+    if not line.strip():
+        continue  # skip empty lines
+    parts = line.strip().split("\t")
+    if len(parts) != 2:
+        print(f"⚠️ Skipping malformed line: {line!r}")
+        continue
+    index, label = parts
     id2label[int(index)] = label
 
 def get_text_emotion(text, top_k=2):

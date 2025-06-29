@@ -1,46 +1,47 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from huggingface_hub import login, hf_hub_download
 from app.config import Config
 
-# === Authenticate with Hugging Face token (for private repo access) ===
-login(token=Config.HF_TOKEN)
+# === Load label map on first call only ===
+label_map = None
 
-# === Load model and tokenizer from Hugging Face Hub ===
-model_path = "Isha2006/emotion-detector-via-text"
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForSequenceClassification.from_pretrained(model_path)
-model.eval()
+def load_label_map(model_path):
+    global label_map
+    if label_map is not None:
+        return label_map
 
-# === Load label names securely using hf_hub_download ===
-try:
-    label_file_path = hf_hub_download(
-        repo_id=model_path,
-        filename="label_names.txt",
-        repo_type="model",
-        token=Config.HF_TOKEN
-    )
-    with open(label_file_path, "r") as f:
-        lines = f.readlines()
-except Exception:
-    lines = []
+    login(token=Config.HF_TOKEN)
 
-# === Process label lines safely ===
-id2label = {}
-for line in lines:
-    if not line.strip():
-        continue
-    parts = line.strip().split("\t")
-    if len(parts) != 2:
-        continue
     try:
-        index = int(parts[0])
-        label = parts[1]
-        id2label[index] = label
-    except ValueError:
-        continue
+        label_file_path = hf_hub_download(
+            repo_id=model_path,
+            filename="label_names.txt",
+            repo_type="model",
+            token=Config.HF_TOKEN
+        )
+        with open(label_file_path, "r") as f:
+            lines = f.readlines()
+    except Exception:
+        lines = []
 
-# === Emotion prediction function ===
+    id2label = {}
+    for line in lines:
+        if not line.strip():
+            continue
+        parts = line.strip().split("\t")
+        if len(parts) != 2:
+            continue
+        try:
+            index = int(parts[0])
+            label = parts[1]
+            id2label[index] = label
+        except ValueError:
+            continue
+
+    label_map = id2label
+    return id2label
+
 def get_text_emotion(text, top_k=2):
     """
     Get top-k emotions from your fine-tuned multi-label emotion model.
@@ -53,6 +54,17 @@ def get_text_emotion(text, top_k=2):
         emotions (list of str): Top-k emotion labels
         scores (list of float): Corresponding confidence scores
     """
+    model_path = "Isha2006/emotion-detector-via-text"
+
+    # Lazy-load tokenizer and model
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    model = AutoModelForSequenceClassification.from_pretrained(model_path)
+    model.eval()
+
+    # Load labels
+    id2label = load_label_map(model_path)
+
+    # Run inference
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
     with torch.no_grad():
         logits = model(**inputs).logits

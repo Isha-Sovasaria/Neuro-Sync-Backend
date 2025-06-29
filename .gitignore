@@ -1,0 +1,57 @@
+# === Python bytecode ===
+__pycache__/
+*.py[cod]
+*.so
+
+# === Virtual environments ===
+venv/
+.venv/
+env/
+ENV/
+
+# === Package info ===
+*.egg-info/
+dist/
+build/
+
+# === Logs and debugging ===
+*.log
+*.bak
+*.swp
+*.tmp
+
+# === Model weights / large files ===
+*.pt
+*.safetensors
+*.onnx
+*.ckpt
+*.h5
+*.tflite
+
+# === Data files ===
+*.csv
+*.tsv
+*.xlsx
+*.jsonl
+
+# === Trained model directory (already pushed to Hugging Face) ===
+app/EMOTION_RECOGNITION_TEXT/finetuned-emotion-model/
+
+# === IDE/editor settings ===
+.vscode/
+.idea/
+
+# === OS-generated files ===
+.DS_Store
+Thumbs.db
+
+# === Jupyter/IPython ===
+.ipynb_checkpoints/
+
+# === Test/coverage ===
+htmlcov/
+.coverage
+.pytest_cache/
+.cache
+.tox/
+.nox/

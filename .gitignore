@@ -8,6 +8,7 @@ venv/
 .venv/
 env/
 ENV/
+venv_p310/
 
 # === Package info ===
 *.egg-info/

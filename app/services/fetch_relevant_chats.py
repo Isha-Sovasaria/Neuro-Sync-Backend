@@ -5,14 +5,11 @@ def fetch_relevant_chats(email, embedding, conversation_id):
     conn = get_connection()
     cur = conn.cursor()
 
-    # Get user_id
     cur.execute("SELECT id FROM users WHERE email = %s", (email,))
     user_id = cur.fetchone()[0]
 
-    # Convert embedding to the format PostgreSQL expects
     embedding_str = '[' + ','.join(map(str, embedding)) + ']'
 
-    # Fetch top 10 semantically similar chats
     cur.execute("""
         SELECT question, response
         FROM chats
@@ -22,7 +19,6 @@ def fetch_relevant_chats(email, embedding, conversation_id):
     """, (user_id, conversation_id, embedding_str))
     similar_chats = cur.fetchall()
 
-    # Fetch all chats from the same conversation
     cur.execute("""
         SELECT question, response
         FROM chats

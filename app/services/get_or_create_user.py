@@ -1,7 +1,6 @@
 from datetime import datetime, date
 from app.db import get_connection
 
-# 1. Just ensure user exists
 def get_or_create_user(email):
     conn = get_connection()
     cur = conn.cursor()
@@ -25,14 +24,12 @@ def mark_user_login(user_id):
     conn = get_connection()
     cur = conn.cursor()
 
-    # === Step 1: Update last login timestamp
     cur.execute("""
         UPDATE users
         SET last_login = %s
         WHERE id = %s;
     """, (datetime.now(), user_id))
 
-    # === Step 2: Insert into streaks table if today's entry doesn't exist
     cur.execute("""
         INSERT INTO streaks (user_id, date_logged)
         VALUES (%s, %s)

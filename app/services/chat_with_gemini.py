@@ -17,28 +17,24 @@ def chat_with_gemini(user_input, email, conversation_id=None, emotion=None, conf
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
 
-    # === Step 1: Embedding and location setup
     embedding = get_embedding_vector(user_input)
-    access_token = "801d518a4fcf32"  # Replace with your actual token
+    access_token = "801d518a4fcf32"
     ip_handler = ipinfo.getHandler(access_token)
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
     if ip_address.startswith("127.") or ip_address == "::1":
-        ip_address = "8.8.8.8"  # fallback for localhost
+        ip_address = "8.8.8.8"
     details = ip_handler.getDetails(ip_address)
     city = details.city
     country = details.country_name
 
-    # === Step 2: Emotion detection if not passed
     if emotion is None or confidence_scores is None:
         emotion, confidence_scores = get_text_emotion(user_input)
 
-    # === Step 3: Get user_id
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT id FROM users WHERE email = %s", (email,))
     user_id = cur.fetchone()[0]
 
-    # === Step 4: Crisis detection
     crisis_data = detect_crisis_level(user_input)
     crisis_label = crisis_data["label"]
     crisis_confidence = crisis_data["confidence"]
@@ -53,16 +49,16 @@ def chat_with_gemini(user_input, email, conversation_id=None, emotion=None, conf
             pattern_note = "This pattern has been recurring over multiple consecutive days.Please mention this to the user and acknowledge that you have noticed this."
 
         helpline_lookup = {
-            "United States": "📞 **Suicide & Crisis Lifeline**: Call or text 988 (24/7, confidential)",
-            "India": "📞 **iCall**: +91 9152987821 (available 24/7)",
-            "United Kingdom": "📞 **Samaritans UK**: Call 116 123 (24/7, free)",
-            "Singapore": "📞 **Samaritans of Singapore (SOS)**: Call 1767",
-            "Canada": "📞 **Talk Suicide Canada**: 1-833-456-4566 (24/7)",
-            "Australia": "📞 **Lifeline Australia**: 13 11 14",
-            "Germany": "📞 **Telefonseelsorge**: 0800 1110111 or 0800 1110222 (24/7)",
-            "South Africa": "📞 **Lifeline South Africa**: 0861 322 322",
-            "New Zealand": "📞 **Lifeline Aotearoa**: 0800 543 354",
-            "Philippines": "📞 **Hopeline Philippines**: (02) 8804-4673 or 0917-558-4673"
+            "United States": "📞 Suicide & Crisis Lifeline: Call or text 988 (24/7, confidential)",
+            "India": "📞 iCall: +91 9152987821 (available 24/7)",
+            "United Kingdom": "📞 Samaritans UK: Call 116 123 (24/7, free)",
+            "Singapore": "📞 Samaritans of Singapore (SOS): Call 1767",
+            "Canada": "📞 Talk Suicide Canada: 1-833-456-4566 (24/7)",
+            "Australia": "📞 Lifeline Australia: 13 11 14",
+            "Germany": "📞 Telefonseelsorge: 0800 1110111 or 0800 1110222 (24/7)",
+            "South Africa": "📞 Lifeline South Africa: 0861 322 322",
+            "New Zealand": "📞 Lifeline Aotearoa: 0800 543 354",
+            "Philippines": "📞 Hopeline Philippines: (02) 8804-4673 or 0917-558-4673"
         }
 
         helpline = helpline_lookup.get(country, "Please reach out to your local emergency support.")
@@ -76,12 +72,10 @@ def chat_with_gemini(user_input, email, conversation_id=None, emotion=None, conf
     else:
         crisis_remark = ""
 
-    # === Step 5: Fetch chat memory
     relevant_chats, same_convo_chats = fetch_relevant_chats(email, embedding, conversation_id)
     same_convo_context = "\n\n".join(f"User: {q}\nAI: {r}" for q, r in same_convo_chats)
     relevant_context = "\n\n".join(f"User: {q}\nAI: {r}" for q, r in relevant_chats)
 
-    # === Step 6: Emotional shift detection
     shift_detected, shift_summary = update_emotion_shift_if_detected(
         conversation_id=conversation_id,
         curr_emotion_1=emotion[0],
@@ -92,11 +86,10 @@ def chat_with_gemini(user_input, email, conversation_id=None, emotion=None, conf
     )
 
     shift_remark = (
-        f"\n\n🌀 **Emotional Shift Noted**:\n{shift_summary.strip()}"
+        f"\n\n **Emotional Shift Noted**:\n{shift_summary.strip()}"
         if shift_detected else ""
     )
 
-    # === Step 7: Build prompt
     prompt = f"""
 You are a compassionate mental health guide who helps users process their emotions and talk through their experiences with care and understanding.
 
@@ -137,13 +130,11 @@ Please keep the emotional state of the user in mind when asking questions or off
 Craft your response mindfully, maintaining continuity and care.
 """.strip()
 
-    # === Step 8: Call Gemini
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(url, headers=headers, json=payload)
     response.raise_for_status()
     reply = response.json()["candidates"][0]["content"]["parts"][0]["text"]
 
-    # === Step 9: Save chat
     new_convo_id = insert_chat(
         email=email,
         question=user_input,
@@ -155,11 +146,9 @@ Craft your response mindfully, maintaining continuity and care.
         crisis_level=crisis_label
     )
 
-    # === DEBUG: Print location and prompt
     print(f"🌍 Location detected: {city}, {country}")
     print("📝 Final Prompt Sent to Gemini:\n", prompt)
 
-    # === Step 10: Update daily emotion summary
     update_daily_emotion_summary(
         user_id=user_id,
         summary_date=datetime.now().date()

@@ -7,11 +7,9 @@ from datetime import datetime
 
 @chatbot_bp.route("/new", methods=["POST"])
 def start_new_conversation():
-    # 🔐 Step 1: Validate Content-Type
     if not request.is_json:
         return jsonify({"error": "Content-Type must be application/json"}), 400
 
-    # 📥 Step 2: Parse JSON and handle empty body
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"error": "Request body must be valid JSON"}), 400
@@ -22,7 +20,6 @@ def start_new_conversation():
     if not email or not conversation_id:
         return jsonify({"error": "'email' and 'conversation_id' are required"}), 422
 
-    # 🔍 Step 3: Validate UUID format
     try:
         conversation_uuid = uuid.UUID(conversation_id)
     except ValueError:

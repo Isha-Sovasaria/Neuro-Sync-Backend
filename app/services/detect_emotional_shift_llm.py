@@ -12,21 +12,18 @@ def detect_emotional_shift_llm(
     if not curr_emotion_1 or not curr_text:
         return False, "Insufficient data"
 
-    # === Format previous emotion block
     prev_emotion_block = f"""
 Previous emotion #1: "{prev_emotion_1}" (confidence: {prev_conf_1:.2f})
 """
     if prev_emotion_2 and prev_conf_2:
         prev_emotion_block += f"""Previous emotion #2: "{prev_emotion_2}" (confidence: {prev_conf_2:.2f})"""
 
-    # === Format current emotion block
     curr_emotion_block = f"""
 Current emotion #1: "{curr_emotion_1}" (confidence: {curr_conf_1:.2f})
 """
     if curr_emotion_2 and curr_conf_2:
         curr_emotion_block += f"""Current emotion #2: "{curr_emotion_2}" (confidence: {curr_conf_2:.2f})"""
 
-    # === Final Prompt
     prompt = f"""
 You are an emotion-aware therapist AI analyzing whether a person is undergoing a meaningful **emotional shift**.
 
@@ -50,7 +47,6 @@ shift: yes or shift: no
 ⚠️ Do not speak to the user. Just reflect analytically.
 """.strip()
 
-    # === Gemini API Call
     api_key = current_app.config["GEMINI_API_KEY"]
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
@@ -66,5 +62,5 @@ shift: yes or shift: no
         return is_shift, explanation
 
     except Exception as e:
-        print("❌ Gemini error in shift detection:", e)
+        print("Gemini error in shift detection:", e)
         return False, str(e)

@@ -12,7 +12,6 @@ def update_emotion_shift_if_detected(
         conn = get_connection()
         cur = conn.cursor()
 
-        # Step 1: Get most recent previous emotions + message
         cur.execute("""
             SELECT 
                 emotion[1], emotion_confidence[1], 
@@ -26,14 +25,13 @@ def update_emotion_shift_if_detected(
         
         row = cur.fetchone()
         if not row:
-            print("👀 Not enough history to detect emotional shift.")
+            print("Not enough history to detect emotional shift.")
             cur.close()
             conn.close()
             return False, "Not enough previous messages"
 
         prev_emotion_1, prev_conf_1, prev_emotion_2, prev_conf_2, prev_text = row
 
-        # Step 2: Call Gemini-based shift detector
         is_shift, explanation = detect_emotional_shift_llm(
             prev_emotion_1=prev_emotion_1,
             prev_conf_1=prev_conf_1 or 0.0,
@@ -47,7 +45,6 @@ def update_emotion_shift_if_detected(
             prev_conf_2=prev_conf_2
         )
 
-        # Step 3: Update conversations table if emotional shift detected
         if is_shift:
             cur.execute("""
                 UPDATE conversations

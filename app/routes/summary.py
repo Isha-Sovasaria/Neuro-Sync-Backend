@@ -12,7 +12,6 @@ def get_daily_summary():
     conn = get_connection()
     cur = conn.cursor()
 
-    # Get user_id
     cur.execute("SELECT id FROM users WHERE email = %s", (email,))
     user_row = cur.fetchone()
     if not user_row:
@@ -20,7 +19,6 @@ def get_daily_summary():
 
     user_id = user_row[0]
 
-    # Fetch only today's summary
     cur.execute("""
         SELECT summary_date, emotion_averages, dominant_emotion
         FROM daily_emotion_summaries
@@ -36,7 +34,6 @@ def get_daily_summary():
 
     summary_date, emotion_averages, dominant_emotion = row
 
-    # Format for graphing: list of { emotion: ..., value: ... }
     emotion_list = [{"emotion": k, "value": round(v, 4)} for k, v in emotion_averages.items()]
 
     return jsonify({
@@ -55,7 +52,6 @@ def get_weekly_emotion_intensity():
     conn = get_connection()
     cur = conn.cursor()
 
-    # Get user_id
     cur.execute("SELECT id FROM users WHERE email = %s", (email,))
     user_row = cur.fetchone()
     if not user_row:
@@ -65,7 +61,6 @@ def get_weekly_emotion_intensity():
     today = date.today()
     monday = today - timedelta(days=today.weekday())
 
-    # Fetch date, dominant_emotion, and emotional_intensity
     cur.execute("""
         SELECT summary_date, dominant_emotion, emotional_intensity
         FROM daily_emotion_summaries

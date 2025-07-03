@@ -42,7 +42,6 @@ def detect_crisis_level(text, top_emotion=None):
         label = "no risk"
         confidence = round(confidence_0, 3)
 
-    # Override if emotion is safe
     if label == "suicidal ideation" and top_emotion and top_emotion.lower() in SAFE_EMOTIONS:
         label = "no risk"
         confidence = 0.7

@@ -66,5 +66,5 @@ torch==2.1.2
 torchaudio==2.1.2
 tqdm==4.67.1
 transformers==4.52.4
-vosk==0.3.45
+vosk==0.3.44 # changed from 0.3.45
 typing_extensions==4.11.0

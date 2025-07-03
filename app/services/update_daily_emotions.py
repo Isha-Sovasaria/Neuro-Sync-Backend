@@ -1,13 +1,12 @@
 from collections import Counter
 import json
 from datetime import date
-from app.db import get_connection  # Update path if needed
+from app.db import get_connection
 
 def update_daily_emotion_summary(user_id, summary_date):
     conn = get_connection()
     cur = conn.cursor()
 
-    # === 1. Get the top (first) emotion from each chat entry ===
     cur.execute("""
         SELECT emotion[1]
         FROM chats
@@ -16,7 +15,6 @@ def update_daily_emotion_summary(user_id, summary_date):
     rows = cur.fetchall()
     raw_emotions = [row[0] for row in rows if row[0] is not None]
 
-    # === 2. Map to emotion categories ===
     emotion_category_map = {
         "anger": "anger", "frustration": "anger", "irritation": "anger", "resentment": "anger",
         "anxiety": "anxiety", "fear": "anxiety", "nervousness": "anxiety", "panic": "anxiety",
@@ -49,22 +47,18 @@ def update_daily_emotion_summary(user_id, summary_date):
     if total == 0:
         cur.close()
         conn.close()
-        return  # Nothing to summarize
+        return
 
-    # === 3. Frequency and averages ===
     freq = Counter(categorized)
     averages = {k: round(v / total, 3) for k, v in freq.items()}
 
-    # === 4. Dominant emotion ===
     dominant_emotion = max(freq.items(), key=lambda x: x[1])[0]
 
-    # === 5. Emotional intensity ===
     emotional_intensity = round(
         sum(freq[cat] * intensity_weights.get(cat, 0) for cat in freq) / total,
         3
     )
 
-    # === 6. Upsert into summary table ===
     cur.execute("""
         INSERT INTO daily_emotion_summaries (
             user_id, summary_date, emotion_averages, total_entries,

@@ -8,14 +8,12 @@ def delete_conversation(chat_id):
         conn = get_connection()
         cur = conn.cursor()
 
-        # 🧪 Optional: Check if the conversation exists before deleting
         cur.execute("SELECT 1 FROM conversations WHERE conversation_id = %s;", (chat_id,))
         if not cur.fetchone():
             cur.close()
             conn.close()
             return jsonify({"error": "Conversation not found"}), 404
 
-        # 🗑️ Delete conversation — cascades to chats
         cur.execute("DELETE FROM conversations WHERE conversation_id = %s;", (chat_id,))
         conn.commit()
         cur.close()

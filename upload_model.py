@@ -6,11 +6,10 @@ local_path = "/Users/isha/backend/app/EMOTION_RECOGNITION_TEXT/finetuned-emotion
 api = HfApi()
 
 for root, dirs, files in os.walk(local_path):
-    # Skip hidden directories like .git
     dirs[:] = [d for d in dirs if not d.startswith('.')]
     for file in files:
         if file.startswith('.'):
-            continue  # skip hidden files
+            continue
         full_path = os.path.join(root, file)
         repo_path = os.path.relpath(full_path, local_path)
 
@@ -22,4 +21,4 @@ for root, dirs, files in os.walk(local_path):
             repo_type="model"
         )
 
-print("✅ All model files uploaded successfully.")
+print("All model files uploaded successfully.")

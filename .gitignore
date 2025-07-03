@@ -58,3 +58,5 @@ htmlcov/
 .nox/
 
 app/models/vosk-model/
+
+venv_p310/
